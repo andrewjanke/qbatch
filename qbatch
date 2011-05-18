@@ -24,7 +24,7 @@ $me = &basename($0);
         type => 'gridengine',
         fake => 0,
         script => undef,
-        queue => 'all.q',
+        queue => undef,
         jname => 'STDIN',
         depends => undef,
         log => undef,
@@ -96,7 +96,6 @@ $script =
 
    # SGE syntax
    "# gridengine directives\n" .
-   "#\$ -q $opt{'queue'}\n" .           # specify the queue
    "#\$ -N $opt{'jname'}\n" .           # job name
    "#\$ -r y\n" .                       # rerun the job on fail
    "#\$ -S $shell\n" .                  # specify the shell
@@ -106,6 +105,10 @@ $script =
    "#\$ -cwd\n" .                       # job is in the current directory
    "#\$ -V\n" .                         # export the current environment
    
+   # queue
+   ((defined($opt{'queue'})) ?
+      "#\$ -q $opt{'queue'}\n" : "") .
+
    # dependencies
    (($#deps > -1) ?
       "#\$ -hold_jid " . join(',', @deps) . "\n" : "\n") .
@@ -114,15 +117,20 @@ $script =
 
    # PBS syntax
    "# PBS directives\n" .
-   "#PBS -q $opt{'queue'}\n" .          # queue name
-   "#PBS -N $opt{'jname'}\n" .          # job name
    "#PBS -r y\n" .                      # rerun the job on fail
    "#PBS -S $shell\n" .                 # specify the shell
    
    "#PBS -j oe\n" .                     # merge STDERR into STDOUT
    "#PBS -o $opt{'logfile'}\n" .        # logfile
-   "#PBS -V\n" .                        # export the current environment
-
+   "#  PBS -V\n" .                        # export the current environment
+   
+   # job name (only 15 characters == fail)
+   "#PBS -N " . substr($opt{'jname'}, 0, 15) . "\n" .
+   
+   # queue
+   ((defined($opt{'queue'})) ?
+      "#PBS -q $opt{'queue'}\n" : "") .
+   
    # dependencies
    (($#deps > -1) ?
       "#PBS -W depend=afterany:" . join(':', @deps) . "\n" : "\n") .
@@ -159,7 +167,7 @@ $script =
    "echo \"## finished:     `date`\"\n" .
    "echo \"## ----------------------------------------------\"\n" .
    "echo\n" .
-   "echo >> $opt{'logfile'}\n" .
+   "echo\n" .
    "\n" .
 
    # send to logfile
@@ -178,7 +186,7 @@ if(defined($opt{'script'})){
 
 # open a pipe to qsub
 if(!$opt{'fake'}){
-   open(QSUB, "|qsub");
+   open(QSUB, "|qsubw");
    print QSUB $script;
    close(QSUB);
    }
