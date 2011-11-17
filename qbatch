@@ -14,7 +14,7 @@ use Cwd;
 
 # until I get organised and do this properly
 my $PACKAGE = &basename($0);
-my $VERSION = '1.2.0';
+my $VERSION = '1.3.0';
 my $PACKAGE_BUGREPORT = '"Andrew Janke" <a.janke@gmail.com>';
  
 my($me, %opt, @command, $script);
@@ -30,6 +30,7 @@ $me = &basename($0);
         log => undef,
         man => 0,
         help => 0,
+        return_jid => 0,
         );
 
 # Check arguments
@@ -44,7 +45,8 @@ $me = &basename($0);
    'q|queue=s' => \$opt{'queue'},
    'N|name=s' => \$opt{'jname'},
    'd|depends=s' => \$opt{'depends'},
-   'l|logfile=s' => \$opt{'logfile'}
+   'l|logfile=s' => \$opt{'logfile'},
+   'j|jid' => \$opt{'return_jid'},
    ) or pod2usage(-verbose => 1) && exit;
    
 # handle -man, -help or missing args
@@ -185,10 +187,33 @@ if(defined($opt{'script'})){
    }
 
 # open a pipe to qsub
+#if(!$opt{'fake'}){
+#   open(QSUB, "|qsub");
+#   print QSUB $script;
+#   close(QSUB);
+#   }
+
+use IPC::Open2;
 if(!$opt{'fake'}){
-   open(QSUB, "|qsubw");
-   print QSUB $script;
-   close(QSUB);
+   my($pid, $jid);
+   
+   $pid = open2(\*QSUB_OUT, \*QSUB_IN, 'qsub');
+   print QSUB_IN $script;
+   close(QSUB_IN);
+   waitpid($pid, 0);
+
+   my $buf = "";
+   while (<QSUB_OUT>){
+      $buf .= $_;
+      ($jid) = $_ =~ m/(\d+)/;
+      }
+   
+   if($opt{'return_jid'}){
+      print STDOUT "$jid\n";
+      }
+   else{
+      print STDOUT $buf;
+      }
    }
 
 sub print_version_info {
@@ -202,7 +227,7 @@ __END__
 
 =head1 NAME
 
-B<qbatch> - sumbits a command line to Grid Engine or PBS via qsub
+B<qbatch> - submits a command line to Grid Engine or PBS via qsub
 
 =head1 SYNOPSIS
 
@@ -278,6 +303,10 @@ Specify a list of job dependencies by job name or number which have to run befor
 
 Logfile for output of the command. By Default this will make a file in the current directory called 
 qbatch-<PID>.log where PID is the Process ID of the instance of qbatch
+
+=item B<-j>, B<--jid>
+
+return only the job id of the submitted job on STDOUT
 
 =back
 
