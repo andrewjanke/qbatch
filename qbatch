@@ -10,6 +10,7 @@ use warnings "all";
 use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
+use IPC::Open2;
 use Cwd;
 
 # until I get organised and do this properly
@@ -193,7 +194,6 @@ if(defined($opt{'script'})){
 #   close(QSUB);
 #   }
 
-use IPC::Open2;
 if(!$opt{'fake'}){
    my($pid, $jid);
    
