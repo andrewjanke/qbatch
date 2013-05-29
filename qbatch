@@ -175,7 +175,7 @@ $script =
    "\n" .
 
    # send to logfile
-   "} 2>&1 > $opt{'logfile'}\n";
+   "} > $opt{'logfile'} 2>&1\n";
 
 print STDOUT "-----SCRIPT-----\n" . 
              $script .
@@ -186,6 +186,8 @@ if(defined($opt{'script'})){
    open(FH, ">$opt{'script'}");
    print FH $script;
    close(FH);
+   
+   chmod(0700, $opt{'script'});
    }
 
 # open a pipe to qsub and collect job id
