@@ -22,7 +22,6 @@ my($me, %opt, @command, $script);
 
 $me = &basename($0);
 %opt = ('verbose' => 0,
-        'type' => 'gridengine',
         'fake' => 0,
         'script' => undef,
         'queue' => undef,
@@ -39,7 +38,6 @@ $me = &basename($0);
    'help|?' => \$opt{'help'},
    'man' => \$opt{'man'},
    'v|verbose' => \$opt{'verbose'},
-   't|type=s' => \$opt{'type'},
    'version' => sub { &print_version_info },
    'f|fake' => \$opt{'fake'},
    's|script=s' => \$opt{'script'},
@@ -67,6 +65,11 @@ foreach (@command){
    }
 
 my($pwd, @pwvalues, $shell, @deps, $stdout, $stderr);
+
+# use QBATCH_QUEUE if defined and no queue set by arguments
+if(!defined($opt{'queue'}) && defined($ENV{'QBATCH_QUEUE'})){
+   $opt{'queue'} = $ENV{'QBATCH_QUEUE'};
+   }
 
 # Get current directory and user shell
 $pwd = &cwd;
@@ -245,9 +248,15 @@ B<qbatch> is a quick hack if you don't want to write a B<qsub> script
 The idea is to just bung B<qbatch> in front of any command you would 
 normally enter on the command line. (as per 'nice')
 
+The output script is currently compatible with both gridengine and most
+flavours of PBS
+
  eg:
     $ qbatch ls -F
     $ qbatch -q wb325.q@taylor -N job23 -- mincmath fred.mnc ..
+
+If the environment variable QBATCH_QUEUE is defined, the job will
+be sent to the defined queue.
 
 Problems or comments should be sent to: a.janke@gmail.com
 
@@ -277,16 +286,12 @@ Don't run anything, This is useful when combined with --verbose or --script
 
 =item B<-s>, B<--script>
 
-Dont run anything, just output the batch script to the specified filename
-
-=item B<--type>
-
-Type of queing system, currently only pbs and gridengine are supported
+Output the batch script to the specified filename
 
 =item B<-q>, B<--queue>
 
 Specify a queue to run a job in. Use something like all.q@hostname to specify a particular host. 
-Defaults to all.q, the default SGE queue
+Note that this will override anthing set by QBATCH_QUEUE in your environment.
 
 =item B<-N>, B<--name>
 
