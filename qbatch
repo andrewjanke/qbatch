@@ -4,6 +4,7 @@
 #
 #
 # A simple interface to SGE + PBS qsub interface for the unwashed
+# Slightly modified to add the h_vmem parameter by Steffen Bollmann 2017-07-04 - Stebo85@web.de
 
 use strict;
 use warnings "all";
@@ -24,12 +25,13 @@ $me = &basename($0);
 %opt = ('verbose' => 0,
         'fake' => 0,
         'script' => undef,
-        'queue' => undef,
+        'queue' => "all.q",
         'jname' => 'STDIN',
         'depends' => undef,
         'log' => undef,
         'man' => 0,
         'help' => 0,
+	'resource_list' => "h_vmem=16G",
         'return_jid' => 0,
         );
 
@@ -44,7 +46,8 @@ $me = &basename($0);
    'q|queue=s' => \$opt{'queue'},
    'N|name=s' => \$opt{'jname'},
    'd|depends=s' => \$opt{'depends'},
-   'l|logfile=s' => \$opt{'logfile'},
+   'o|logfile=s' => \$opt{'logfile'},
+   'l|resource_list=s' => \$opt{'resource_list'},
    'j|jid' => \$opt{'return_jid'},
    ) or pod2usage('-verbose' => 1) && exit;
    
@@ -105,6 +108,9 @@ $script =
 
    "#\$ -j yes\n" .                     # join STDOUT and STDERR
    "#\$ -o $opt{'logfile'}\n" .         # logfile
+
+   "#\$ -l $opt{'resource_list'}\n" .         # resource_list
+
    "#\$ -cwd\n" .                       # job is in the current directory
    "#\$ -V\n" .                         # export the current environment
    
@@ -125,6 +131,9 @@ $script =
    
    "#PBS -j oe\n" .                     # merge STDERR into STDOUT
    "#PBS -o $opt{'logfile'}\n" .        # logfile
+
+   "#PBS -l $opt{'resource_list'}\n" .  # resource_list
+	
    "#  PBS -V\n" .                        # export the current environment
    
    # job name (only 15 characters == fail)
@@ -301,10 +310,16 @@ Specify a job name to run the job as. By default this will be "STDIN"
 
 Specify a list of job dependencies by job name or number which have to run before this job will
 
-=item B<-l>, B<--logfile>
+=item B<-o>, B<--logfile>
 
 Logfile for output of the command. By Default this will make a file in the current directory called 
 qbatch-<PID>.log where PID is the Process ID of the instance of qbatch
+
+=item B<-l>, B<--resource_list>
+
+Resource List parameters. By Default this will be h_vmem=16GB - change to smaller or larger values 
+depending on the memory usage of your application
+
 
 =item B<-j>, B<--jid>
 
