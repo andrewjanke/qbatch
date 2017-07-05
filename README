@@ -1,82 +1,56 @@
-QBATCH(1)               User   Contributed   Perl   Documentation
+Usage:
+    qbatch [options] [-q queue] -- command
 
-NAME
-       qbatch - submits a command line to Grid Engine or PBS  via
-qsub
+    qbatch is designed to be inserted before any command that you would
+    usually run from the command line. In case of argument collision where
+    both your command and qbatch share an option such as --verbose be sure
+    to use the '--' syntax to split qbatch options from the commands options
 
-SYNOPSIS
-       qbatch [options] [--queue] -- command
+       $ qbatch --verbose -- mincmath --verbose ...
 
-       qbatch  is designed to be inserted before any command that
-       you would usually run from the command line.  In case of 
-       argument collision where both your command and qbatch 
-       share an option such as --verbose be sure to use the '--'
-       syntax to split qbatch  options  from  the commands
-       options
+Options:
+    -v, --verbose
+        Be noisy when doing things (most importantly this will echo the
+        resulting script to the terminal)
 
-          $ qbatch --verbose -- mincmath --verbose ...
+    --version
+        Print version number and exit
 
-DESCRIPTION
-       qbatch  is  a quick hack if you don't want to write a qsub
-       script
+    -h, --help
+        Dump some quick help output
 
-       The idea is to just bung qbatch in front  of  any  command
-       you would normally enter on the command line. (as per 'nice')
+    --man
+        Dump a man page
 
-        eg:
-           $ qbatch ls -F
-           $  qbatch  -q  wb325.q@taylor -N job23 -- mincmath \
-                fred.mnc ..
+    -f, --fake
+        Don't run anything, This is useful when combined with --verbose or
+        --script
 
-       Problems or comments should be sent to: a.janke@gmail.com
+    -s, --script
+        Output the batch script to the specified filename
 
-OPTIONS
-       -v, --verbose
-           Be noisy when doing things (most importantly this will
-             echo the resulting script to the terminal)
+    -q, --queue
+        Specify a queue to run a job in. Use something like all.q@hostname
+        to specify a particular host. Note that this will override anthing
+        set by QBATCH_QUEUE in your environment.
 
-       --verbose
-           Print version number and exit
+    -N, --name
+        Specify a job name to run the job as. By default this will be
+        "STDIN"
 
-       -h, --help
-           Dump some quick help output
+    -d, --depends
+        Specify a list of job dependencies by job name or number which have
+        to run before this job will
 
-       --man
-           Dump a man page
+    -o, --logfile
+        Logfile for output of the command. By Default this will make a file
+        in the current directory called qbatch-<PID>.log where PID is the
+        Process ID of the instance of qbatch
 
-       -f, --fake
-           Don't  run anything, This is useful when combined with
-             --verbose or --script
+    -l, --resource_list
+        Resource List parameters. By Default this will be h_vmem=16GB -
+        change to smaller or larger values depending on the memory usage of
+        your application
 
-       -s, --script
-           Dont run anything, just output the batch script to the
-             specified filename
-
-       --type
-           Type  of  queing  system,  currently only pbs and gri-
-              dengine are supported
-
-       -q, --queue
-           Specify a queue to run a job in.  Use  something  like
-              all.q@hostname to specify a particular host. Defaults
-              to all.q, the default SGE queue
-
-       -N, --name
-           Specify a job name to run the job as. By default this
-              will be "STDIN"
-
-       -d, --depends
-           Specify a list of job dependencies by job name or num-
-              ber which have to run before this job will
-
-       -l, --logfile
-           Logfile for output of the  command.  By  Default  this
-              will make a file in the current directory called 
-              qbatch-<PID>.log where PID is the Process ID of the
-              instance of qbatch
-
-       -j, --jid
-           return only the job id of the submitted job on STDOUT
-
-AUTHOR
-       Andrew Janke - a.janke@gmail.com
+    -j, --jid
+        return only the job id of the submitted job on STDOUT

@@ -4,6 +4,7 @@
 #
 #
 # A simple interface to SGE + PBS qsub interface for the unwashed
+# Slightly modified to add the h_vmem parameter by Steffen Bollmann 2017-07-04 - Stebo85@web.de
 
 use strict;
 use warnings "all";
@@ -30,6 +31,7 @@ $me = &basename($0);
         'log' => undef,
         'man' => 0,
         'help' => 0,
+	'resource_list' => "h_vmem=30G",
         'return_jid' => 0,
         );
 
@@ -44,7 +46,8 @@ $me = &basename($0);
    'q|queue=s' => \$opt{'queue'},
    'N|name=s' => \$opt{'jname'},
    'd|depends=s' => \$opt{'depends'},
-   'l|logfile=s' => \$opt{'logfile'},
+   'o|logfile=s' => \$opt{'logfile'},
+   'l|resource_list=s' => \$opt{'resource_list'},
    'j|jid' => \$opt{'return_jid'},
    ) or pod2usage('-verbose' => 1) && exit;
    
@@ -105,6 +108,9 @@ $script =
 
    "#\$ -j yes\n" .                     # join STDOUT and STDERR
    "#\$ -o $opt{'logfile'}\n" .         # logfile
+
+   "#\$ -l $opt{'resource_list'}\n" .         # resource_list
+
    "#\$ -cwd\n" .                       # job is in the current directory
    "#\$ -V\n" .                         # export the current environment
    
@@ -125,6 +131,9 @@ $script =
    
    "#PBS -j oe\n" .                     # merge STDERR into STDOUT
    "#PBS -o $opt{'logfile'}\n" .        # logfile
+
+   "#PBS -l $opt{'resource_list'}\n" .  # resource_list
+	
    "#  PBS -V\n" .                        # export the current environment
    
    # job name (only 15 characters == fail)
@@ -231,7 +240,7 @@ B<qbatch> - submits a command line to Grid Engine or PBS via qsub
 
 =head1 SYNOPSIS
 
-B<qbatch> [options] [B<-q> queue] -- command
+B<qbatch> [options] [B<-q> queue] [B<-l> h_vmem=30G] -- command
 
 qbatch is designed to be inserted before any command that you would
 usually run from the command line. In case of argument collision
@@ -239,7 +248,9 @@ where both your command and qbatch share an option such as --verbose
 be sure to use the '--' syntax to split qbatch options from the 
 commands options
 
-   $ qbatch --verbose -- mincmath --verbose ...
+   $ qbatch -l h_vmem=30G --verbose -- mincmath --verbose ...
+
+By default qbatch sets the resource parameter h_vmem=30G. Adjust this to be twice as high as the real memory requirements of your job.
 
 =head1 DESCRIPTION
 
@@ -301,10 +312,16 @@ Specify a job name to run the job as. By default this will be "STDIN"
 
 Specify a list of job dependencies by job name or number which have to run before this job will
 
-=item B<-l>, B<--logfile>
+=item B<-o>, B<--logfile>
 
 Logfile for output of the command. By Default this will make a file in the current directory called 
 qbatch-<PID>.log where PID is the Process ID of the instance of qbatch
+
+=item B<-l>, B<--resource_list>
+
+Resource List parameters. By Default this will be h_vmem=30G - change to smaller or larger values 
+depending on the memory usage of your application
+
 
 =item B<-j>, B<--jid>
 
