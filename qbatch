@@ -25,13 +25,13 @@ $me = &basename($0);
 %opt = ('verbose' => 0,
         'fake' => 0,
         'script' => undef,
-        'queue' => "all.q",
+        'queue' => undef,
         'jname' => 'STDIN',
         'depends' => undef,
         'log' => undef,
         'man' => 0,
         'help' => 0,
-	'resource_list' => "h_vmem=16G",
+	'resource_list' => "h_vmem=30G",
         'return_jid' => 0,
         );
 
@@ -240,7 +240,7 @@ B<qbatch> - submits a command line to Grid Engine or PBS via qsub
 
 =head1 SYNOPSIS
 
-B<qbatch> [options] [B<-q> queue] -- command
+B<qbatch> [options] [B<-q> queue] [B<-l> h_vmem=30G] -- command
 
 qbatch is designed to be inserted before any command that you would
 usually run from the command line. In case of argument collision
@@ -248,7 +248,9 @@ where both your command and qbatch share an option such as --verbose
 be sure to use the '--' syntax to split qbatch options from the 
 commands options
 
-   $ qbatch --verbose -- mincmath --verbose ...
+   $ qbatch -l h_vmem=30G --verbose -- mincmath --verbose ...
+
+By default qbatch sets the resource parameter h_vmem=30G. Adjust this to be twice as high as the real memory requirements of your job.
 
 =head1 DESCRIPTION
 
@@ -317,7 +319,7 @@ qbatch-<PID>.log where PID is the Process ID of the instance of qbatch
 
 =item B<-l>, B<--resource_list>
 
-Resource List parameters. By Default this will be h_vmem=16GB - change to smaller or larger values 
+Resource List parameters. By Default this will be h_vmem=30G - change to smaller or larger values 
 depending on the memory usage of your application
 
 
